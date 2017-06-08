@@ -5,13 +5,40 @@ const morgan = require('morgan');
 
 const {DATABASE_URL, PORT} = require('./config');
 const {BlogPost} = require('./models');
+const {User} = require('./models');
 
 const app = express();
 
 app.use(morgan('common'));
 app.use(bodyParser.json());
+passport.use(basicStrategy);
 
 mongoose.Promise = global.Promise;
+
+const basicStrategy = new basicStrategy((username, password, callback) => {
+  let user;
+  User
+    .findOne({userName: username})
+    .exec()
+    .then(_user => {
+      user = _user;
+      if(!user){
+        return callback(null, false, {message: 'Incorrect username'});
+      }
+      return user.validatePassword(password);
+    })
+    .then(valid => {
+      if (!valid) {
+        return callback(null, false, {message: 'Incorrect password'});
+      }
+      else {
+        return callback(null, user);
+      }
+    })
+    .catch(err => {
+      callback(err);
+    });
+});
 
 
 app.get('/posts', (req, res) => {
@@ -61,6 +88,20 @@ app.post('/posts', (req, res) => {
         res.status(500).json({error: 'Something went wrong'});
     });
 
+});
+
+app.post('/users', (req, res) => {
+
+  if (!req.body) {
+    return res.status(400).json({message: 'Empty request body'});
+  }
+  if (!('userName' in req.body)) {
+    return res.status(422).json({message: 'Missing username'});
+  }
+
+  let {userName, password, firstName, lastName} = req.body;
+
+  userName = userName.trim();
 });
 
 
