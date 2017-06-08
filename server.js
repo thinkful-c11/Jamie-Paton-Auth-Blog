@@ -15,7 +15,6 @@ const app = express();
 
 app.use(morgan('common'));
 app.use(bodyParser.json());
-passport.use(basicStrategy);
 
 mongoose.Promise = global.Promise;
 
@@ -44,6 +43,7 @@ const basicStrategy = new BasicStrategy((username, password, callback) => {
     });
 });
 
+passport.use(basicStrategy);
 
 app.get('/posts', (req, res) => {
   BlogPost
@@ -102,11 +102,13 @@ app.post('/users', (req, res) => {
   if (!('userName' in req.body)) {
     return res.status(422).json({ message: 'Missing username' });
   }
-  if (typeof (userName) !== 'string') {
-    return res.status(422).json({ message: 'Username must be a string' });
-  }
 
   let { userName, password, firstName, lastName } = req.body;
+
+
+  if (typeof userName !== 'string') {
+    return res.status(422).json({ message: 'Username must be a string' });
+  }
 
   userName = userName.trim();
 
@@ -114,7 +116,7 @@ app.post('/users', (req, res) => {
     return res.status(422).json({ message: 'Username is nonexistent' });
   }
 
-  if (!('password' in req.body)) {
+  if (!(password)) {
     return res.status(422).json({ message: 'Missing password' });
   }
   if (typeof (password) !== 'string') {
@@ -133,24 +135,24 @@ app.post('/users', (req, res) => {
     .exec()
     .then(count => {
       if (count > 0) {
-        return res.status(400).json({message: 'This username already exists'});
+        return res.status(400).json({ message: 'This username already exists' });
       }
-      return User.hashPassword();
+      return User.hashPassword(password);
     })
     .then(hash => {
       return User
-      .create({
-        userName: userName,
-        password: hash, 
-        firstName: firstName,
-        lastName: lastName
-      });
+        .create({
+          userName: userName,
+          password: hash,
+          firstName: firstName,
+          lastName: lastName
+        });
     })
     .then(newUser => {
       return res.status(201).json(newUser.apiRepr());
     })
-    .catch (err => {
-      res.status(500).json({message: 'This is an error'});
+    .catch(err => {
+      res.status(500).json({ message: 'This is a catch error' });
     });
 });
 
