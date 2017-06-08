@@ -43,7 +43,7 @@ userSchema.methods.apiRepr = function() {
   };
 };
 
-userSchema.method.validatePassword = function(password){
+userSchema.methods.validatePassword = function(password){
   return bcrypt.compare(password, this.password);
 };
 

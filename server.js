@@ -26,13 +26,13 @@ const basicStrategy = new BasicStrategy((username, password, callback) => {
     .then(_user => {
       user = _user;
       if (!user) {
-        return callback(null, false, { message: 'Incorrect username' });
+        return callback(null, false, { message: 'Incorrect username or password' });
       }
       return user.validatePassword(password);
     })
     .then(valid => {
       if (!valid) {
-        return callback(null, false, { message: 'Incorrect password' });
+        return callback(null, false, { message: 'Incorrect username or password' });
       }
       else {
         return callback(null, user);
@@ -44,8 +44,9 @@ const basicStrategy = new BasicStrategy((username, password, callback) => {
 });
 
 passport.use(basicStrategy);
+app.use(passport.initialize());
 
-app.get('/posts', (req, res) => {
+app.get('/posts', passport.authenticate('basic', {session: false}), (req, res) => {
   BlogPost
     .find()
     .exec()
@@ -58,7 +59,7 @@ app.get('/posts', (req, res) => {
     });
 });
 
-app.get('/posts/:id', (req, res) => {
+app.get('/posts/:id', passport.authenticate('basic', {session: false}), (req, res) => {
   BlogPost
     .findById(req.params.id)
     .exec()
@@ -69,12 +70,12 @@ app.get('/posts/:id', (req, res) => {
     });
 });
 
-app.post('/posts', (req, res) => {
-  const requiredFields = ['title', 'content', 'author'];
+app.post('/posts', passport.authenticate('basic', {session: false}), (req, res) => {
+  const requiredFields = ['title', 'content'];
   for (let i = 0; i < requiredFields.length; i++) {
     const field = requiredFields[i];
     if (!(field in req.body)) {
-      const message = `Missing \`${field}\` in request body`
+      const message = `Missing \`${field}\` in request body`;
       console.error(message);
       return res.status(400).send(message);
     }
@@ -84,7 +85,10 @@ app.post('/posts', (req, res) => {
     .create({
       title: req.body.title,
       content: req.body.content,
-      author: req.body.author
+      author: {
+        firstName: req.user.firstName,
+        lastName: req.user.lastName
+      }
     })
     .then(blogPost => res.status(201).json(blogPost.apiRepr()))
     .catch(err => {
@@ -103,7 +107,7 @@ app.post('/users', (req, res) => {
     return res.status(422).json({ message: 'Missing username' });
   }
 
-  let { userName, password, firstName, lastName } = req.body;
+  let {userName, password, firstName, lastName} = req.body;
 
 
   if (typeof userName !== 'string') {
@@ -157,7 +161,7 @@ app.post('/users', (req, res) => {
 });
 
 
-app.delete('/posts/:id', (req, res) => {
+app.delete('/posts/:id', passport.authenticate('basic', {session: false}), (req, res) => {
   BlogPost
     .findByIdAndRemove(req.params.id)
     .exec()
@@ -171,7 +175,7 @@ app.delete('/posts/:id', (req, res) => {
 });
 
 
-app.put('/posts/:id', (req, res) => {
+app.put('/posts/:id', passport.authenticate('basic', {session: false}), (req, res) => {
   if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
     res.status(400).json({
       error: 'Request path id and request body id values must match'
@@ -194,7 +198,7 @@ app.put('/posts/:id', (req, res) => {
 });
 
 
-app.delete('/:id', (req, res) => {
+app.delete('/:id', passport.authenticate('basic', {session: false}), (req, res) => {
   BlogPosts
     .findByIdAndRemove(req.params.id)
     .exec()
