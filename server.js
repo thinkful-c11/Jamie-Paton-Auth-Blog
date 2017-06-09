@@ -88,10 +88,7 @@ app.post('/posts', passport.authenticate('basic', {session: false}), (req, res) 
     .create({
       title: req.body.title,
       content: req.body.content,
-      author: {
-        firstName: req.user.firstName,
-        lastName: req.user.lastName
-      }
+      author: req.body.author
     })
     .then(blogPost => res.status(201).json(blogPost.apiRepr()))
     .catch(err => {

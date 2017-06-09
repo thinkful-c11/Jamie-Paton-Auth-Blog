@@ -59,8 +59,8 @@ function seedUser() {
   return User.create({
     userName: 'alice',
     password: '$2a$10$AwOoGvC4xxh8SF2hIt1m1.OJyGl6Z0WX/vWgHN3u7H9bHTixhNC7q',
-    firstName: faker.name.firstName(),
-    lastName: faker.name.lastName()
+    firstName: 'user',
+    lastName: 'last-name'
   });
 }
 
@@ -98,7 +98,6 @@ describe('blog posts API resource', function () {
       //    3. prove the number of posts we got back is equal to number
       //       in db.
       let res;
-      console.log('This is our username', User.userName);
       return chai.request(app)
         .get('/posts')
         .auth('alice', 'baseball')
@@ -150,7 +149,7 @@ describe('blog posts API resource', function () {
     });
   });
 
-  describe.only('POST endpoint', function () {
+  describe('POST endpoint', function () {
     // strategy: make a POST request with data,
     // then prove that the post we get back has
     // right keys, and that `id` is there (which means
@@ -168,6 +167,7 @@ describe('blog posts API resource', function () {
 
       return chai.request(app)
         .post('/posts')
+        .auth('alice', 'baseball')
         .send(newPost)
         .then(function (res) {
           res.should.have.status(201);
@@ -217,6 +217,7 @@ describe('blog posts API resource', function () {
 
           return chai.request(app)
             .put(`/posts/${post.id}`)
+            .auth('alice', 'baseball')
             .send(updateData);
         })
         .then(res => {
@@ -254,7 +255,7 @@ describe('blog posts API resource', function () {
         .exec()
         .then(_post => {
           post = _post;
-          return chai.request(app).delete(`/posts/${post.id}`);
+          return chai.request(app).delete(`/posts/${post.id}`).auth('alice', 'baseball');
         })
         .then(res => {
           res.should.have.status(204);
