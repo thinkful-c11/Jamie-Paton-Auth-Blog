@@ -13,6 +13,9 @@ const { BasicStrategy } = require('passport-http');
 
 const app = express();
 
+User.hashPassword('baseball').then(hash => console.log(hash));
+
+
 app.use(morgan('common'));
 app.use(bodyParser.json());
 
@@ -95,7 +98,6 @@ app.post('/posts', passport.authenticate('basic', {session: false}), (req, res) 
       console.error(err);
       res.status(500).json({ error: 'Something went wrong' });
     });
-
 });
 
 app.post('/users', (req, res) => {
