@@ -148,6 +148,45 @@ describe('blog posts API resource', function () {
           resPost.author.should.equal(post.authorName);
         });
     });
+
+    it('should not allow access with no credentials', function () {
+      return chai.request(app)
+        .get('/posts')
+        .send()
+        .then(function (res) {
+          res.should.have.status(401);
+        })
+        .catch(res => {
+          res.should.have.status(401);
+        });
+    });
+
+    it('should not allow access with wrong username', function () {
+      return chai.request(app)
+        .get('/posts')
+        .auth('paton', USER.unhashedPassword)
+        .send()
+        .then(function (res) {
+          res.should.have.status(401);
+        })
+        .catch(res => {
+          res.should.have.status(401);
+        });
+    });
+
+    it('should not allow access with wrong password', function () {
+      return chai.request(app)
+        .get('/posts')
+        .auth(USER.userName, 'open sesame')
+        .send()
+        .then(function (res) {
+          res.should.have.status(401);
+        })
+        .catch(res => {
+          res.should.have.status(401);
+        });
+    });
+
   });
 
   describe('POST endpoint', function () {
@@ -192,7 +231,7 @@ describe('blog posts API resource', function () {
         });
     });
 
-    it('Should add a new user to the database', function(){
+    it('Should add a new user to the database', function () {
       const newUser = {
         userName: faker.internet.userName(),
         password: 'topsecret',
@@ -203,7 +242,7 @@ describe('blog posts API resource', function () {
       return chai.request(app)
         .post('/users')
         .send(newUser)
-        .then(function(res){
+        .then(function (res) {
           res.should.have.status(201);
           res.should.be.json;
           res.body.should.be.a('object');
@@ -213,6 +252,11 @@ describe('blog posts API resource', function () {
           res.body.lastName.should.equal(newUser.lastName);
         });
     });
+
+    // it('should give an error if not authorized', function() {
+
+    // });
+
   });
 
   describe('PUT endpoint', function () {
