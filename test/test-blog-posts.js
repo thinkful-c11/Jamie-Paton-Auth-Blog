@@ -10,12 +10,19 @@ const mongoose = require('mongoose');
 const should = chai.should();
 
 const { DATABASE_URL } = require('../config');
-const { BlogPost } = require('../models');
+const { BlogPost, User } = require('../models');
 const { closeServer, runServer, app } = require('../server');
 const { TEST_DATABASE_URL } = require('../config');
-const {User} = require('../models');
 
 chai.use(chaiHttp);
+
+const USER = {
+  userName: faker.internet.userName(),
+  unhashedPassword: 'baseball',
+  password: '$2a$10$AwOoGvC4xxh8SF2hIt1m1.OJyGl6Z0WX/vWgHN3u7H9bHTixhNC7q',
+  firstName: faker.name.firstName(),
+  lastName: faker.name.lastName()
+};
 
 // this function deletes the entire database.
 // we'll call it in an `afterEach` block below
@@ -55,13 +62,7 @@ function seedBlogPostData() {
 
 
 function seedUser() {
-  console.info('seeding user data');
-  return User.create({
-    userName: 'alice',
-    password: '$2a$10$AwOoGvC4xxh8SF2hIt1m1.OJyGl6Z0WX/vWgHN3u7H9bHTixhNC7q',
-    firstName: 'user',
-    lastName: 'last-name'
-  });
+  return User.create(USER);
 }
 
 
@@ -100,7 +101,7 @@ describe('blog posts API resource', function () {
       let res;
       return chai.request(app)
         .get('/posts')
-        .auth('alice', 'baseball')
+        .auth(USER.userName, USER.unhashedPassword)
         .send()
         .then(_res => {
           res = _res;
@@ -123,7 +124,7 @@ describe('blog posts API resource', function () {
       let resPost;
       return chai.request(app)
         .get('/posts')
-        .auth('alice', 'baseball')
+        .auth(USER.userName, USER.unhashedPassword)
         .send()
         .then(function (res) {
 
@@ -159,15 +160,15 @@ describe('blog posts API resource', function () {
       const newPost = {
         title: faker.lorem.sentence(),
         author: {
-          firstName: faker.name.firstName(),
-          lastName: faker.name.lastName(),
+          firstName: USER.firstName,
+          lastName: USER.lastName,
         },
         content: faker.lorem.text()
       };
 
       return chai.request(app)
         .post('/posts')
-        .auth('alice', 'baseball')
+        .auth(USER.userName, USER.unhashedPassword)
         .send(newPost)
         .then(function (res) {
           res.should.have.status(201);
@@ -188,6 +189,28 @@ describe('blog posts API resource', function () {
           post.content.should.equal(newPost.content);
           post.author.firstName.should.equal(newPost.author.firstName);
           post.author.lastName.should.equal(newPost.author.lastName);
+        });
+    });
+
+    it('Should add a new user to the database', function(){
+      const newUser = {
+        userName: faker.internet.userName(),
+        password: 'topsecret',
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName()
+      };
+
+      return chai.request(app)
+        .post('/users')
+        .send(newUser)
+        .then(function(res){
+          res.should.have.status(201);
+          res.should.be.json;
+          res.body.should.be.a('object');
+          res.body.should.include.keys('userName', 'firstName', 'lastName');
+          res.body.userName.should.equal(newUser.userName);
+          res.body.firstName.should.equal(newUser.firstName);
+          res.body.lastName.should.equal(newUser.lastName);
         });
     });
   });
@@ -217,7 +240,7 @@ describe('blog posts API resource', function () {
 
           return chai.request(app)
             .put(`/posts/${post.id}`)
-            .auth('alice', 'baseball')
+            .auth(USER.userName, USER.unhashedPassword)
             .send(updateData);
         })
         .then(res => {
@@ -255,7 +278,7 @@ describe('blog posts API resource', function () {
         .exec()
         .then(_post => {
           post = _post;
-          return chai.request(app).delete(`/posts/${post.id}`).auth('alice', 'baseball');
+          return chai.request(app).delete(`/posts/${post.id}`).auth(USER.userName, USER.unhashedPassword);
         })
         .then(res => {
           res.should.have.status(204);
