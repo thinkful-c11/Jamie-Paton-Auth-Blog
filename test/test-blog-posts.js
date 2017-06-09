@@ -347,8 +347,8 @@ describe('blog posts API resource', function () {
         .then(post => {
           return chai.request(app)
             .put(`/posts/${post.id}`)
-            .send()
-            })
+            .send();
+        })
         .then(function (res) {
           res.should.have.status(401);
         })
@@ -365,8 +365,8 @@ describe('blog posts API resource', function () {
           return chai.request(app)
             .put(`/posts/${post.id}`)
             .auth('paton', USER.unhashedPassword)
-            .send()
-            })
+            .send();
+        })
         .then(function (res) {
           res.should.have.status(401);
         })
@@ -383,8 +383,8 @@ describe('blog posts API resource', function () {
           return chai.request(app)
            .put(`/posts/${post.id}`)
             .auth(USER.userName, 'open sesame')
-            .send()
-            })
+            .send();
+        })
         .then(function (res) {
           res.should.have.status(401);
         })
@@ -393,7 +393,7 @@ describe('blog posts API resource', function () {
         });
     });
   });
-  describe.only('DELETE endpoint', function () {
+  describe('DELETE endpoint', function () {
     // strategy:
     //  1. get a post
     //  2. make a DELETE request for that post's id
@@ -423,47 +423,13 @@ describe('blog posts API resource', function () {
         });
     });
 
-  it('should not allow access with no credentials', function () {
-    return BlogPost
+    it('should not allow access with no credentials', function () {
+      return BlogPost
         .findOne()
         .exec()
         .then(post => {
           return chai.request(app)
-            .delete(`/posts/${post.id}`)
-            })
-        .then(function (res) {
-          res.should.have.status(401);
-        })
-        .catch(res => {
-          res.should.have.status(401);
-        });
-  });
-
-  it('should not allow access with wrong username', function () {
-    return BlogPost
-        .findOne()
-        .exec()
-        .then(post => {
-          return chai.request(app)
-            .delete(`/posts/${post.id}`)
-            .auth('paton', USER.unhashedPassword)
-            })
-        .then(function (res) {
-          res.should.have.status(401);
-        })
-        .catch(res => {
-          res.should.have.status(401);
-        });
-  });
-
-  it('should not allow access with wrong password', function () {
-    return BlogPost
-        .findOne()
-        .exec()
-        .then(post => {
-          return chai.request(app)
-           .delete(`/posts/${post.id}`)
-           .auth(USER.userName, 'open sesame')
+            .delete(`/posts/${post.id}`);
         })
         .then(function (res) {
           res.should.have.status(401);
@@ -472,4 +438,39 @@ describe('blog posts API resource', function () {
           res.should.have.status(401);
         });
     });
+
+    it('should not allow access with wrong username', function () {
+      return BlogPost
+        .findOne()
+        .exec()
+        .then(post => {
+          return chai.request(app)
+            .delete(`/posts/${post.id}`)
+            .auth('paton', USER.unhashedPassword);
+        })
+        .then(function (res) {
+          res.should.have.status(401);
+        })
+        .catch(res => {
+          res.should.have.status(401);
+        });
+    });
+
+    it('should not allow access with wrong password', function () {
+      return BlogPost
+        .findOne()
+        .exec()
+        .then(post => {
+          return chai.request(app)
+           .delete(`/posts/${post.id}`)
+           .auth(USER.userName, 'open sesame');
+        })
+        .then(function (res) {
+          res.should.have.status(401);
+        })
+        .catch(res => {
+          res.should.have.status(401);
+        });
+    });
+  });
 });
